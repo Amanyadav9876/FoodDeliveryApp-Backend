@@ -3,6 +3,7 @@ package com.foodDelivery.FoodDeliveryApp.service;
 import com.foodDelivery.FoodDeliveryApp.dto.request.LoginRequest;
 import com.foodDelivery.FoodDeliveryApp.dto.request.RegisterRequest;
 import com.foodDelivery.FoodDeliveryApp.dto.response.AuthResponse;
+import com.foodDelivery.FoodDeliveryApp.exception.EmailAlreadyRegisteredException;
 import com.foodDelivery.FoodDeliveryApp.model.User;
 import com.foodDelivery.FoodDeliveryApp.repository.UserRepository;
 import com.foodDelivery.FoodDeliveryApp.security.JwtUtil;
@@ -30,7 +31,7 @@ public class AuthService {
 
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already registered!");
+            throw new EmailAlreadyRegisteredException();
         }
 
 
@@ -62,7 +63,8 @@ public class AuthService {
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),
-                "Registration successful! OTP bheja gaya hai."
+                "Registration successful! OTP bheja gaya hai.",
+                null
         );
     }
 
@@ -90,7 +92,8 @@ public class AuthService {
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),
-                "Email verified! Login ho gaye ho."
+                "Email verified! Login ho gaye ho.",
+                user.getId()
         );
     }
 
@@ -122,7 +125,9 @@ public class AuthService {
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),
-                "Login Successful!"
+                "Login Successful!",
+                user.getId()
         );
+
     }
 }

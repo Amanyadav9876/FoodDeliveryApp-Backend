@@ -26,7 +26,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/api/auth/");
+        String method = request.getMethod();
+        return path.startsWith("/api/auth/") || method.equals("OPTIONS");
     }
 
     @Override
@@ -34,31 +35,34 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain)
-        throws ServletException , IOException {
-        String authHeader=request.getHeader("Authorization");
-        String token=null;
-        String email=null;
-        if(authHeader !=null && authHeader.startsWith("Bearer ")){
-            token=authHeader.substring(7);
-            email=jwtUtil.extractEmail(token);
-        }
-        if(email !=null && SecurityContextHolder.getContext().getAuthentication()==null){
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            if(jwtUtil.validateToken(email,token)){
-                UsernamePasswordAuthenticationToken authToken=new
-                        UsernamePasswordAuthenticationToken(userDetails,null,
-                        userDetails.getAuthorities());
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authToken);
+            throws ServletException, IOException {
 
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String email = null;
 
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            try {
+                email = jwtUtil.extractEmail(token);
+            } catch (Exception e) {
+                // Invalid token — skip karo
+                filterChain.doFilter(request, response);
+                return;
             }
         }
-        filterChain.doFilter(request,response);
+
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            if (jwtUtil.validateToken(email, token)) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+        filterChain.doFilter(request, response);
     }
-
-
-
 }

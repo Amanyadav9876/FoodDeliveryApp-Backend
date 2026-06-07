@@ -19,6 +19,8 @@ public class Restaurant implements Serializable {
     private String name;
     private String address;
     private String phone;
+    private String ownerEmail; // ← ye add karo
+
     private String ownerId;
     private  String city;
     private  boolean Open;
