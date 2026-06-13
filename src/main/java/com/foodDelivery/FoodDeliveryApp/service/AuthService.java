@@ -26,55 +26,45 @@ public class AuthService {
     @Autowired
     private EmailService emailService;
 
-
     public AuthResponse register(RegisterRequest request) {
-
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyRegisteredException();
         }
 
-
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(
-                request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
         user.setRole(request.getRole());
-        user.setEmailVerified(false);
-
-
-        String otp = emailService.generateOtp();
-        user.setOtp(otp);
-
+        user.setEmailVerified(true); // ✅ Direct verified
 
         userRepository.save(user);
 
-        emailService.saveOtp(request.getEmail(), otp);
-        try {
-            emailService.sendOtpEmail(request.getEmail(), otp);
-        } catch (Exception e) {
-            System.out.println("Email send failed: " + e.getMessage());
-        }
+        // OTP disabled
+        // String otp = emailService.generateOtp();
+        // user.setOtp(otp);
+        // emailService.saveOtp(request.getEmail(), otp);
+        // try {
+        //     emailService.sendOtpEmail(request.getEmail(), otp);
+        // } catch (Exception e) {
+        //     System.out.println("Email send failed: " + e.getMessage());
+        // }
 
         return new AuthResponse(
                 null,
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),
-                "Registration successful! OTP bheja gaya hai.",
+                "Registration successful!",
                 null
         );
     }
 
-
     public AuthResponse verifyOtp(String email, String otp) {
-
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found!"));
-
+                .orElseThrow(() -> new RuntimeException("User not found!"));
 
         if (!emailService.verifyOtp(email, otp)) {
             throw new RuntimeException("Invalid OTP!");
@@ -83,7 +73,6 @@ public class AuthService {
         user.setEmailVerified(true);
         user.setOtp(null);
         userRepository.save(user);
-
 
         String token = jwtUtil.generateToken(email);
 
@@ -97,26 +86,18 @@ public class AuthService {
         );
     }
 
-
     public AuthResponse login(LoginRequest request) {
-
         User user = userRepository
                 .findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new RuntimeException("User not found!"));
-
+                .orElseThrow(() -> new RuntimeException("User not found!"));
 
         if (!user.isEmailVerified()) {
-            throw new RuntimeException(
-                    "Email verify karo pehle!");
+            throw new RuntimeException("Email verify karo pehle!");
         }
 
-
-        if (!passwordEncoder.matches(
-                request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Wrong password!");
         }
-
 
         String token = jwtUtil.generateToken(user.getEmail());
 
@@ -128,6 +109,5 @@ public class AuthService {
                 "Login Successful!",
                 user.getId()
         );
-
     }
 }
