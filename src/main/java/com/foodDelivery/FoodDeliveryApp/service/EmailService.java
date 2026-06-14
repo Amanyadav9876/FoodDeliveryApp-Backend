@@ -5,6 +5,7 @@ import com.foodDelivery.FoodDeliveryApp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -42,6 +43,7 @@ public class EmailService {
         return false;
     }
 
+    @Async
     public void sendOtpEmail(String email, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
@@ -54,6 +56,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    @Async
     public void mailConfirmation(String email, String orderId) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
