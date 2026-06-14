@@ -8,7 +8,6 @@ import com.foodDelivery.FoodDeliveryApp.model.User;
 import com.foodDelivery.FoodDeliveryApp.repository.UserRepository;
 import com.foodDelivery.FoodDeliveryApp.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,15 +25,6 @@ public class AuthService {
 
     @Autowired
     private EmailService emailService;
-
-    @Async
-    protected void sendOtpAsync(String email, String otp) {
-        try {
-            emailService.sendOtpEmail(email, otp);
-        } catch (Exception e) {
-            System.out.println("Email send failed: " + e.getMessage());
-        }
-    }
 
     public AuthResponse register(RegisterRequest request) {
 
@@ -54,8 +44,8 @@ public class AuthService {
         user.setOtp(otp);
         userRepository.save(user);
 
-        // Async email — user ko turant response milega
-        sendOtpAsync(request.getEmail(), otp);
+        // Async email — turant response milega
+        emailService.sendOtpEmail(request.getEmail(), otp);
 
         return new AuthResponse(
                 null,
