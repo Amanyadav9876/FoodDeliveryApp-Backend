@@ -38,26 +38,26 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
         user.setRole(request.getRole());
-        user.setEmailVerified(true); // ✅ Direct verified
+        user.setEmailVerified(false);
 
+        // OTP generate karo
+        String otp = emailService.generateOtp();
+        user.setOtp(otp);
         userRepository.save(user);
 
-        // OTP disabled
-        // String otp = emailService.generateOtp();
-        // user.setOtp(otp);
-        // emailService.saveOtp(request.getEmail(), otp);
-        // try {
-        //     emailService.sendOtpEmail(request.getEmail(), otp);
-        // } catch (Exception e) {
-        //     System.out.println("Email send failed: " + e.getMessage());
-        // }
+        // Email bhejo
+        try {
+            emailService.sendOtpEmail(request.getEmail(), otp);
+        } catch (Exception e) {
+            System.out.println("Email send failed: " + e.getMessage());
+        }
 
         return new AuthResponse(
                 null,
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),
-                "Registration successful!",
+                "OTP bheja gaya hai email pe! Verify karo.",
                 null
         );
     }
