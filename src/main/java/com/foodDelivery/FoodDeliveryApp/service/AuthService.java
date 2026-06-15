@@ -23,11 +23,7 @@ public class AuthService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private EmailService emailService;
-
     public AuthResponse register(RegisterRequest request) {
-
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyRegisteredException();
         }
@@ -38,45 +34,18 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
         user.setRole(request.getRole());
-        user.setEmailVerified(false);
+        user.setEmailVerified(true); // Direct verified
 
-        String otp = emailService.generateOtp();
-        user.setOtp(otp);
         userRepository.save(user);
 
-        // Async email — turant response milega
-        emailService.sendOtpEmail(request.getEmail(), otp);
-
-        return new AuthResponse(
-                null,
-                user.getEmail(),
-                user.getName(),
-                user.getRole(),
-                "OTP bheja gaya hai email pe! Verify karo.",
-                null
-        );
-    }
-
-    public AuthResponse verifyOtp(String email, String otp) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
-
-        if (!emailService.verifyOtp(email, otp)) {
-            throw new RuntimeException("Invalid OTP!");
-        }
-
-        user.setEmailVerified(true);
-        user.setOtp(null);
-        userRepository.save(user);
-
-        String token = jwtUtil.generateToken(email);
+        String token = jwtUtil.generateToken(user.getEmail());
 
         return new AuthResponse(
                 token,
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),
-                "Email verified! Login ho gaye ho.",
+                "Registration successful!",
                 user.getId()
         );
     }
@@ -85,10 +54,6 @@ public class AuthService {
         User user = userRepository
                 .findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found!"));
-
-        if (!user.isEmailVerified()) {
-            throw new RuntimeException("Email verify karo pehle!");
-        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Wrong password!");
