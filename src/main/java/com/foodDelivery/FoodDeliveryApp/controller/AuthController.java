@@ -24,11 +24,4 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
-
-    @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestParam String email,
-                                       @RequestParam String otp) {
-        return ResponseEntity.ok(authService.verifyOtp(email, otp));
-    }
-
 }
